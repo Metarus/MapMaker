@@ -3,13 +3,18 @@ int tileWidth=8, tagNum=8;
 int UIBlock=128;
 boolean w, s, mouseClicked;
 
-int[][] mapNums=new int[28][18];
+int[][] mapNums=new int[8][8];
 boolean[][] tags;
 
 PImage sprites[];
 
+Tab spriteList;
+Tab map;
+
 void setup() {
-  fullScreen(P2D);
+  noSmooth();
+  size(2000, 1200);
+  frameRate(60);
   
   PImage spriteSheet;
   spriteSheet=loadImage("map/mapTiles.png");
@@ -19,8 +24,11 @@ void setup() {
   tags=new boolean[sprites.length][tagNum];
   
   for(int i=0; i<sprites.length; i++) {
-    sprites[i]=spriteSheet.get(tileWidth*i%spriteSheet.width, tileWidth*floor(i/spriteSheet.width), tileWidth, tileWidth);
+    sprites[i]=spriteSheet.get(tileWidth*i%spriteSheet.width, tileWidth*floor(tileWidth*i/spriteSheet.width), tileWidth, tileWidth);
   }
+  
+  spriteList=new Tab(0, 0, 3*UIBlock+1, height);
+  map=new Tab(500, 0, tileWidth*scale*mapNums.length, tileWidth*scale*mapNums[0].length+20);
   
   readData();
 }
@@ -29,18 +37,18 @@ void draw() {
   exitButton();
   
   if(w) scroll-=10;
-  if(s) scroll+=10;
+  if(s) scroll=-((-scroll-10)+abs(scroll+10))/2;
 
   background(255);
   
   spriteList();
-  tagList();
   mapDisplay();
   
   fill(255, 0, 0);
   rect(width-90, 0, 90, 50);
   
   mouseClicked=false;
+  println(frameRate);
 }
 
 boolean cursorRect(float x, float y, float w, float h) {
@@ -64,59 +72,64 @@ void keyReleased() {
 }
 
 void spriteList() {
+  spriteList.tab.beginDraw();
+  spriteList.tab.background(255);
+  spriteList.tab.noStroke();
   for(int i=0; i<sprites.length; i++) {
-    noStroke();
     int x=i%2*UIBlock;
-    int y=(i-i%2)*64+scroll;
-    image(sprites[i], x, y, UIBlock, UIBlock);
-    if(cursorRect(x, y, UIBlock, UIBlock)) {
-      fill(0, 10);
-      rect(x, y, UIBlock, UIBlock);
-      if(mousePressed) {
-        spriteSelected=i;
+    int y=20+(i-i%2)*64+scroll;
+    if(y<height&&y+UIBlock>0) {
+      spriteList.tab.image(sprites[i], x, y, UIBlock, UIBlock);
+      if(cursorRect(spriteList.pos.x+x, 0.5*(((spriteList.pos.y+y)+20)+abs((spriteList.pos.y+y)-20)), UIBlock, UIBlock)) {
+        spriteList.tab.fill(0, 10);
+        spriteList.tab.rect(x, y, UIBlock, UIBlock);
+        if(mousePressed) {
+          spriteSelected=i;
+        }
+      }
+      if(spriteSelected==i) {
+        spriteList.tab.fill(0, 30);
+        spriteList.tab.rect(x, y, UIBlock, UIBlock);
       }
     }
-    if(spriteSelected==i) {
-      fill(0, 30);
-      rect(x, y, UIBlock, UIBlock);
-    }
-    stroke(1);
   }
-}
-
-void tagList() {
+  spriteList.tab.stroke(1);
   for(int i=0; i<tagNum; i++) {
     int x=2*UIBlock;
-    int y=i*UIBlock;
+    int y=20+i*UIBlock;
     if(tags[spriteSelected][i]) {
-      fill(128);
-      rect(x, y, UIBlock, UIBlock);
+      spriteList.tab.fill(128);
+      spriteList.tab.rect(x, y, UIBlock, UIBlock);
     }
-    if(cursorRect(x, y, UIBlock, UIBlock)) {
-      fill(0, 10);
-      rect(x, y, UIBlock, UIBlock);
+    if(cursorRect(spriteList.pos.x+x, spriteList.pos.y+y, UIBlock, UIBlock)) {
+      spriteList.tab.fill(0, 10);
+      spriteList.tab.rect(x, y, UIBlock, UIBlock);
       if(mouseClicked) {
         tags[spriteSelected][i]=!tags[spriteSelected][i];
       }
     }
   }
+  spriteList.update();
 }
 
 void mapDisplay() {
+  map.tab.beginDraw();
   for(int i=0; i<mapNums.length; i++) {
     for(int j=0; j<mapNums[i].length; j++) {
-      int x=500+i*tileWidth*scale;
-      int y=j*tileWidth*scale;
-      image(sprites[mapNums[i][j]], x, y, scale*tileWidth, scale*tileWidth);
-      fill(0, 0);
-      rect(x, y, scale*tileWidth, scale*tileWidth);
-      if(cursorRect(x, y, scale*tileWidth, scale*tileWidth)) {
+      int x=i*tileWidth*scale;
+      int y=20+j*tileWidth*scale;
+      map.tab.image(sprites[mapNums[i][j]], x, y, scale*tileWidth, scale*tileWidth);
+      map.tab.fill(0, 0);
+      map.tab.rect(x, y, scale*tileWidth, scale*tileWidth);
+      if(cursorRect(map.pos.x+x, map.pos.y+y, scale*tileWidth, scale*tileWidth)) {
         if(mousePressed) {
           mapNums[i][j]=spriteSelected;
         }
       }
     }
   }
+  map.tab.endDraw();
+  map.update();
 }
 
 void exitButton() {
