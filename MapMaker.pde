@@ -1,10 +1,11 @@
-int scale=15, scroll=0, spriteSelected=0;
+int scale=8, scroll=0, spriteSelected=0;
 int tileWidth=8, tagNum=8;
 int UIBlock=128;
-boolean w, s, mouseClicked;
+boolean w, s, up, down, left, right, mouseClicked;
 
-int[][] mapNums=new int[8][8];
+int[][] mapNums=new int[20][20];
 boolean[][] tags;
+PVector mapPos=new PVector(0, 0);
 
 PImage sprites[];
 
@@ -28,7 +29,7 @@ void setup() {
   }
   
   spriteList=new Tab(0, 0, 3*UIBlock+1, height);
-  map=new Tab(500, 0, tileWidth*scale*mapNums.length, tileWidth*scale*mapNums[0].length+20);
+  map=new Tab(3*UIBlock+1, 0, width-800, height-100);
   
   readData();
 }
@@ -41,14 +42,13 @@ void draw() {
 
   background(255);
   
-  spriteList();
   mapDisplay();
+  spriteList();
   
   fill(255, 0, 0);
   rect(width-90, 0, 90, 50);
   
   mouseClicked=false;
-  println(frameRate);
 }
 
 boolean cursorRect(float x, float y, float w, float h) {
@@ -64,23 +64,32 @@ void mouseClicked() {
 void keyPressed() {
   if(key=='w') w=true;
   if(key=='s') s=true;
+  if(keyCode==UP) up=true;
+  if(keyCode==DOWN) down=true;
+  if(keyCode==LEFT) left=true;
+  if(keyCode==RIGHT) right=true;
 }
 
 void keyReleased() {
   if(key=='w') w=false;
   if(key=='s') s=false;
+  if(keyCode==UP) up=false;
+  if(keyCode==DOWN) down=false;
+  if(keyCode==LEFT) left=false;
+  if(keyCode==RIGHT) right=false;
 }
 
 void spriteList() {
+  spriteList.update();
   spriteList.tab.beginDraw();
   spriteList.tab.background(255);
   spriteList.tab.noStroke();
   for(int i=0; i<sprites.length; i++) {
     int x=i%2*UIBlock;
-    int y=20+(i-i%2)*64+scroll;
+    int y=20+(i-i%2)*(UIBlock/2)+scroll;
     if(y<height&&y+UIBlock>0) {
       spriteList.tab.image(sprites[i], x, y, UIBlock, UIBlock);
-      if(cursorRect(spriteList.pos.x+x, 0.5*(((spriteList.pos.y+y)+20)+abs((spriteList.pos.y+y)-20)), UIBlock, UIBlock)) {
+      if(spriteList.tabRect(x, y, UIBlock, UIBlock)) {
         spriteList.tab.fill(0, 10);
         spriteList.tab.rect(x, y, UIBlock, UIBlock);
         if(mousePressed) {
@@ -101,7 +110,7 @@ void spriteList() {
       spriteList.tab.fill(128);
       spriteList.tab.rect(x, y, UIBlock, UIBlock);
     }
-    if(cursorRect(spriteList.pos.x+x, spriteList.pos.y+y, UIBlock, UIBlock)) {
+    if(spriteList.tabRect(x, y, UIBlock, UIBlock)) {
       spriteList.tab.fill(0, 10);
       spriteList.tab.rect(x, y, UIBlock, UIBlock);
       if(mouseClicked) {
@@ -109,27 +118,38 @@ void spriteList() {
       }
     }
   }
-  spriteList.update();
+  spriteList.display();
 }
 
 void mapDisplay() {
+  map.update();
+  if(up) mapPos.y=0.5*((mapPos.y+30)-abs(mapPos.y+30));
+  if(down) mapPos.y=-0.5*((-mapPos.y+30)+(scale*tileWidth*mapNums[0].length-map.tab.height+20)-abs((-mapPos.y+30)-(scale*tileWidth*mapNums[0].length-map.tab.height+20)));
+  if(left) mapPos.x=0.5*((mapPos.x+30)-abs(mapPos.x+30));
+  if(right) mapPos.x=-0.5*((-mapPos.x+30)+(scale*tileWidth*mapNums.length-map.tab.width)-abs((-mapPos.x+30)-(scale*tileWidth*mapNums.length-map.tab.width)));
   map.tab.beginDraw();
+  String bottomRight="";
   for(int i=0; i<mapNums.length; i++) {
     for(int j=0; j<mapNums[i].length; j++) {
-      int x=i*tileWidth*scale;
-      int y=20+j*tileWidth*scale;
+      int x=i*tileWidth*scale+int(mapPos.x);
+      int y=20+j*tileWidth*scale+int(mapPos.y);
       map.tab.image(sprites[mapNums[i][j]], x, y, scale*tileWidth, scale*tileWidth);
       map.tab.fill(0, 0);
       map.tab.rect(x, y, scale*tileWidth, scale*tileWidth);
-      if(cursorRect(map.pos.x+x, map.pos.y+y, scale*tileWidth, scale*tileWidth)) {
+      if(map.tabRect(x, y, scale*tileWidth, scale*tileWidth)) {
         if(mousePressed) {
           mapNums[i][j]=spriteSelected;
         }
+        bottomRight="Tile: "+mapNums[i][j]+", "+i+", "+j;
       }
     }
   }
+  map.tab.textAlign(RIGHT);
+  map.tab.textSize(50);
+  map.tab.fill(0);
+  map.tab.text(bottomRight, map.tab.width-15, map.tab.height-10);
   map.tab.endDraw();
-  map.update();
+  map.display();
 }
 
 void exitButton() {
