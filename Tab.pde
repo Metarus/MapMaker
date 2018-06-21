@@ -8,10 +8,12 @@ class Tab {
     tab=createGraphics(w, h);
   }
   void update() {
-    if(cursorRect(pos.x, pos.y, tab.width, 20)) {
+    if(cursorRect(pos.x, pos.y, tab.width, 20)&&!isDragging) {
+      isDragging=true;
       dragging=true;
     }
     if(!mousePressed) {
+      isDragging=false;
       dragging=false;
     }
     if(dragging) {

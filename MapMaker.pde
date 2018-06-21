@@ -2,6 +2,7 @@ int scale=8, scroll=0, spriteSelected=0;
 int tileWidth=8, tagNum=8;
 int UIBlock=128;
 boolean w, s, up, down, left, right, mouseClicked;
+boolean isDragging;
 
 int[][] mapNums=new int[20][20];
 boolean[][] tags;
@@ -92,7 +93,7 @@ void spriteList() {
       if(spriteList.tabRect(x, y, UIBlock, UIBlock)) {
         spriteList.tab.fill(0, 10);
         spriteList.tab.rect(x, y, UIBlock, UIBlock);
-        if(mousePressed) {
+        if(mousePressed&&!isDragging) {
           spriteSelected=i;
         }
       }
@@ -137,7 +138,7 @@ void mapDisplay() {
       map.tab.fill(0, 0);
       map.tab.rect(x, y, scale*tileWidth, scale*tileWidth);
       if(map.tabRect(x, y, scale*tileWidth, scale*tileWidth)) {
-        if(mousePressed) {
+        if(mousePressed&&!isDragging) {
           mapNums[i][j]=spriteSelected;
         }
         bottomRight="Tile: "+mapNums[i][j]+", "+i+", "+j;
@@ -153,7 +154,7 @@ void mapDisplay() {
 }
 
 void exitButton() {
-  if(cursorRect(width-90, 0, 90, 50)&&mousePressed) {
+  if(cursorRect(width-90, 0, 90, 50)&&mousePressed&&!isDragging) {
     writeData();
     exit();
   }
