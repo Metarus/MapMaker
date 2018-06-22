@@ -1,10 +1,10 @@
 int scale=8, scroll=0, spriteSelected=0;
 int tileWidth=8, tagNum=8;
 int UIBlock=128;
-boolean w, s, up, down, left, right, mouseClicked;
+boolean w, s, up, down, left, right, plus, minus, mouseClicked;
 boolean isDragging;
 
-int[][] mapNums=new int[20][20];
+int[][] mapNums=new int[64][64];
 boolean[][] tags;
 PVector mapPos=new PVector(0, 0);
 
@@ -65,6 +65,8 @@ void mouseClicked() {
 void keyPressed() {
   if(key=='w') w=true;
   if(key=='s') s=true;
+  if(key=='-') minus=true;
+  if(key=='=') plus=true;
   if(keyCode==UP) up=true;
   if(keyCode==DOWN) down=true;
   if(keyCode==LEFT) left=true;
@@ -74,6 +76,8 @@ void keyPressed() {
 void keyReleased() {
   if(key=='w') w=false;
   if(key=='s') s=false;
+  if(key=='-') minus=false;
+  if(key=='=') plus=false;
   if(keyCode==UP) up=false;
   if(keyCode==DOWN) down=false;
   if(keyCode==LEFT) left=false;
@@ -124,11 +128,14 @@ void spriteList() {
 
 void mapDisplay() {
   map.update();
+  if(plus) scale++;
+  if(minus) scale--;
   if(up) mapPos.y=0.5*((mapPos.y+30)-abs(mapPos.y+30));
   if(down) mapPos.y=-0.5*((-mapPos.y+30)+(scale*tileWidth*mapNums[0].length-map.tab.height+20)-abs((-mapPos.y+30)-(scale*tileWidth*mapNums[0].length-map.tab.height+20)));
   if(left) mapPos.x=0.5*((mapPos.x+30)-abs(mapPos.x+30));
   if(right) mapPos.x=-0.5*((-mapPos.x+30)+(scale*tileWidth*mapNums.length-map.tab.width)-abs((-mapPos.x+30)-(scale*tileWidth*mapNums.length-map.tab.width)));
   map.tab.beginDraw();
+  map.tab.background(255);
   String bottomRight="";
   for(int i=0; i<mapNums.length; i++) {
     for(int j=0; j<mapNums[i].length; j++) {
