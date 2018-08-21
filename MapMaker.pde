@@ -4,6 +4,12 @@ int UIBlock=128;
 boolean w, s, up, down, left, right, plus, minus, mouseClicked;
 boolean isDragging;
 
+String[] toolList={"brush", "line", "fill"};
+int toolSelected=0;
+int lineX, lineY;
+boolean linePressed, lineReset;
+int brushSize=1;
+
 int[][] mapNums=new int[64][64];
 boolean[][] tags;
 PVector mapPos=new PVector(0, 0);
@@ -12,6 +18,7 @@ PImage sprites[];
 
 Tab spriteList;
 Tab map;
+Tab tools;
 
 void setup() {
   noSmooth();
@@ -31,6 +38,7 @@ void setup() {
   
   spriteList=new Tab(0, 0, 3*UIBlock+1, height);
   map=new Tab(3*UIBlock+1, 0, width-800, height-100);
+  tools=new Tab(3*UIBlock+1+width-800, 0, 300, height-100);
   
   readData();
 }
@@ -45,6 +53,7 @@ void draw() {
   
   mapDisplay();
   spriteList();
+  tools();
   
   fill(255, 0, 0);
   rect(width-90, 0, 90, 50);
@@ -58,8 +67,11 @@ boolean cursorRect(float x, float y, float w, float h) {
   } else return false;
 }
 
-void mouseClicked() {
-  mouseClicked=true;
+void mouseReleased() {
+  if(lineReset) {
+    linePressed=false;
+    lineReset=false;
+  }
 }
 
 void keyPressed() {
@@ -146,7 +158,7 @@ void mapDisplay() {
       map.tab.rect(x, y, scale*tileWidth, scale*tileWidth);
       if(map.tabRect(x, y, scale*tileWidth, scale*tileWidth)) {
         if(mousePressed&&!isDragging) {
-          mapNums[i][j]=spriteSelected;
+          toolOnBlock(i, j);
         }
         bottomRight="Tile: "+mapNums[i][j]+", "+i+", "+j;
       }
@@ -158,6 +170,96 @@ void mapDisplay() {
   map.tab.text(bottomRight, map.tab.width-15, map.tab.height-10);
   map.tab.endDraw();
   map.display();
+}
+
+void tools() {
+  tools.update();
+  tools.tab.beginDraw();
+  tools.tab.background(255);
+  if(mousePressed) {
+    for(int i=0; i<toolList.length; i++) {
+      if(tools.tabRect(0, i*150+20, 150, 150)) {
+        toolSelected=i;
+      }
+    }
+  }
+  for(int i=0; i<toolList.length; i++) {
+    if(toolSelected==i) {
+      tools.tab.fill(200);
+    } else tools.tab.fill(255);
+    tools.tab.rect(0, 150*i+20, 150, 150);
+    tools.tab.textAlign(CENTER);
+    tools.tab.textSize(30);
+    tools.tab.fill(0);
+    tools.tab.text(toolList[i], 75, 100+150*i);
+  }
+  tools.tab.endDraw();
+  tools.display();
+}
+
+void toolOnBlock(int x, int y) {
+  switch (toolSelected) {
+    case 0:
+      brushTool(x, y);
+      break;
+    case 1:
+      lineTool(x, y);
+      break;
+    case 2:
+      fillTool(x, y);
+      break;
+  }
+}
+
+void brushTool(int x, int y) {
+  mapNums[x][y]=spriteSelected;
+}
+
+void lineTool(int x, int y) {
+  if(!linePressed) {
+    lineX=x;
+    lineY=y;
+    linePressed=true;
+  }
+  if(linePressed&&lineX!=x||lineY!=y) {
+    float totalDist=dist(x, y, lineX, lineY);
+    PVector movement=new PVector((lineX-x)/totalDist, (lineY-y)/totalDist);
+    for(int i=0; i<totalDist+0.2; i++) {
+      mapNums[round(x+movement.x*i)][round(y+movement.y*i)]=spriteSelected;
+    }
+    lineReset=true;
+  }
+}
+
+void fillTool(int x, int y) {
+  int prevBlock=mapNums[x][y];
+  mapNums[x][y]=spriteSelected;
+  for(int i=0; i<4; i++) {
+    int tempX=0, tempY=0;
+    switch(i) {
+      case 1:
+        tempX=x-1;
+        tempY=y;
+        break;
+      case 0:
+        tempX=x+1;
+        tempY=y;
+        break;
+      case 2:
+        tempX=x;
+        tempY=y-1;
+        break;
+      case 3:
+        tempX=x;
+        tempY=y+1;
+        break;
+    }
+    if(tempX>=0&&tempX<=mapNums.length-1&&tempY>=0&&tempY<=mapNums.length-1) {
+      if(mapNums[tempX][tempY]==prevBlock&&mapNums[tempX][tempY]!=spriteSelected) {
+        fillTool(tempX, tempY);
+      }
+    }
+  }
 }
 
 void exitButton() {
