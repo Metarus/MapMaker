@@ -74,6 +74,10 @@ void mouseReleased() {
   }
 }
 
+void mouseClicked() {
+  mouseClicked=true;
+}
+
 void keyPressed() {
   if(key=='w') w=true;
   if(key=='s') s=true;
